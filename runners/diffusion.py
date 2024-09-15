@@ -1,28 +1,27 @@
-import os
-import logging
-import time
 import glob
+import logging
+import math
+import os
+import time
 
 import numpy as np
 import pandas as pd
-import math
-import tqdm
 import torch
 import torch.utils.data as data
-
+import torchvision
+import torchvision.utils as tvu
+import tqdm
+from datasets import data_transform, inverse_data_transform
+from datasets.BRATS import BRATS
+from datasets.LDFDCT import LDFDCT
+from datasets.pmub import PMUB
+from functions import get_optimizer
+from functions.ckpt_util import get_ckpt_path
+from functions.losses import calculate_psnr, loss_registry
 from models.diffusion import Model
 from models.ema import EMAHelper
-from functions import get_optimizer
-from functions.losses import loss_registry, calculate_psnr
-from datasets import data_transform, inverse_data_transform
-from datasets.pmub import PMUB
-from datasets.LDFDCT import LDFDCT
-from datasets.BRATS import BRATS
-from functions.ckpt_util import get_ckpt_path
-from skimage.metrics import structural_similarity as ssim
-import torchvision.utils as tvu
-import torchvision
 from PIL import Image
+from skimage.metrics import structural_similarity as ssim
 
 
 def torch2hwcuint8(x, clip=False):
@@ -153,6 +152,8 @@ class Diffusion(object):
 
         start_epoch, step = 0, 0
         if self.args.resume_training:
+            #INFO: The log_path is defined in fast_ddpm_main.py line 99
+            # It's something like PROJECT_PATH/logs/MODEL_NAME
             states = torch.load(os.path.join(self.args.log_path, "ckpt.pth"))
             model.load_state_dict(states[0])
 
@@ -868,7 +869,8 @@ class Diffusion(object):
             else:
                 raise Exception("The scheduler type is either uniform or non-uniform.")
 
-            from functions.denoising import generalized_steps, sr_generalized_steps
+            from functions.denoising import (generalized_steps,
+                                             sr_generalized_steps)
 
             xs = sr_generalized_steps(x, x_bw, x_fw, seq, model, self.betas, eta=self.args.eta)
             x = xs
@@ -913,7 +915,9 @@ class Diffusion(object):
             else:
                 raise Exception("The scheduler type is either uniform or non-uniform.")
                 
-            from functions.denoising import generalized_steps, sr_generalized_steps, sg_generalized_steps
+            from functions.denoising import (generalized_steps,
+                                             sg_generalized_steps,
+                                             sr_generalized_steps)
 
             xs = sg_generalized_steps(x, x_img, seq, model, self.betas, eta=self.args.eta)
             x = xs
@@ -922,7 +926,8 @@ class Diffusion(object):
             skip = self.num_timesteps // self.args.timesteps
             seq = range(0, self.num_timesteps, skip)
 
-            from functions.denoising import ddpm_steps, sr_ddpm_steps, sg_ddpm_steps
+            from functions.denoising import (ddpm_steps, sg_ddpm_steps,
+                                             sr_ddpm_steps)
 
             x = sg_ddpm_steps(x, x_img, seq, model, self.betas)
         else:

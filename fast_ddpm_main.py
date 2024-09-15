@@ -1,14 +1,14 @@
 import argparse
-import traceback
-import shutil
 import logging
-import yaml
-import sys
 import os
-import torch
-import numpy as np
-import torch.utils.tensorboard as tb
+import shutil
+import sys
+import traceback
 
+import numpy as np
+import torch
+import torch.utils.tensorboard as tb
+import yaml
 from runners.diffusion import Diffusion
 
 torch.set_printoptions(sci_mode=False)
@@ -21,7 +21,10 @@ def parse_args_and_config():
         "--config", type=str, default="pmub_linear.yml", help="Path to the config file"
     )
     parser.add_argument(
-        "--dataset", type=str, default="PMUB", help="Name of dataset(LDFDCT, BRATS, PMUB)"
+        "--dataset",
+        type=str,
+        default="PMUB",
+        help="Name of dataset(LDFDCT, BRATS, PMUB)",
     )
     parser.add_argument("--seed", type=int, default=1244, help="Random seed")
     parser.add_argument(
@@ -91,6 +94,9 @@ def parse_args_and_config():
     parser.add_argument("--sequence", action="store_true")
 
     args = parser.parse_args()
+    # INFO: In the README's sample runs,
+    # exp is the "PROJECT_PATH" and doc is the "MODEL_NAME"
+    # So in total it's something like PROJECT_PATH/logs/MODEL_NAME
     args.log_path = os.path.join(args.exp, "logs", args.doc)
 
     # parse config file
@@ -164,11 +170,13 @@ def parse_args_and_config():
             os.makedirs(os.path.join(args.exp, "image_samples"), exist_ok=True)
             if args.fid:
                 args.image_folder = os.path.join(
-                args.exp, "image_samples", args.doc, "images_fid")
+                    args.exp, "image_samples", args.doc, "images_fid"
+                )
             if args.interpolation:
                 args.image_folder = os.path.join(
-                args.exp, "image_samples", args.doc, "images_interpolation")
- 
+                    args.exp, "image_samples", args.doc, "images_interpolation"
+                )
+
             if not os.path.exists(args.image_folder):
                 os.makedirs(args.image_folder)
             else:
@@ -226,21 +234,25 @@ def main():
     try:
         runner = Diffusion(args, config)
         if args.sample:
-            if args.dataset=='PMUB':
+            if args.dataset == "PMUB":
                 runner.sr_sample()
-            elif args.dataset=='LDFDCT' or args.dataset=='BRATS':
+            elif args.dataset == "LDFDCT" or args.dataset == "BRATS":
                 runner.sg_sample()
             else:
-                raise Exception("This script only supports LDFDCT, BRATS and PMUB as sampling dataset. Feel free to add your own.")
+                raise Exception(
+                    "This script only supports LDFDCT, BRATS and PMUB as sampling dataset. Feel free to add your own."
+                )
         elif args.test:
             runner.test()
         else:
-            if args.dataset=='PMUB':
+            if args.dataset == "PMUB":
                 runner.sr_train()
-            elif args.dataset=='LDFDCT' or args.dataset=='BRATS':
+            elif args.dataset == "LDFDCT" or args.dataset == "BRATS":
                 runner.sg_train()
             else:
-                raise Exception("This script only supports LDFDCT, BRATS and PMUB as training dataset. Feel free to add your own.")
+                raise Exception(
+                    "This script only supports LDFDCT, BRATS and PMUB as training dataset. Feel free to add your own."
+                )
     except Exception:
         logging.error(traceback.format_exc())
 

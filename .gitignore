@@ -1,0 +1,5 @@
+data/*
+exp/logs/*
+*.pth
+*.npy
+*/__pycache__/*
